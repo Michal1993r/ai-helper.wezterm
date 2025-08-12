@@ -1,16 +1,24 @@
 local wezterm = require("wezterm")
 local act = wezterm.action
 
-local function findPluginPackagePath(myProject)
+local function findPluginPackagePath(search_pattern)
     local separator = package.config:sub(1, 1) == "\\" and "\\" or "/"
     for _, v in ipairs(wezterm.plugin.list()) do
-        if v.url == myProject then
+        -- Match by component name or URL containing the search pattern
+        if (v.component and v.component:find(search_pattern, 1, true)) or
+            (v.url and v.url:find(search_pattern, 1, true)) then
             return v.plugin_dir .. separator .. "plugin" .. separator .. "?.lua"
         end
     end
+    return nil
 end
 
-package.path = package.path .. ";" .. findPluginPackagePath("file:///Users/mickl/Sources/ai-helper.wezterm")
+local plugin_path = findPluginPackagePath("ai-helpersDswezterm")
+if plugin_path then
+    package.path = package.path .. ";" .. plugin_path
+else
+    wezterm.log_warn("AI Helper: Could not find plugin directory, some modules may not load correctly")
+end
 
 local io = require("io")
 local ok, handle = pcall(io.popen, "/opt/homebrew/bin/luarocks path --bin 2>&1")
