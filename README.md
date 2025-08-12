@@ -19,8 +19,9 @@ ai_helper.apply_to_config(config, {
 ```
 
 ### Option 2: Cloud with Google Gemini
-1. Get a Google API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Add to your `wezterm.lua`:
+1. Install the required Lua JSON library: `luarocks install dkjson`
+2. Get a Google API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+3. Add to your `wezterm.lua`:
 
 ```lua
 local ai_helper = require("path.to.plugin")
@@ -96,6 +97,9 @@ ai_helper.apply_to_config(config, {
         ["X-Custom-Header"] = "value"
     },
     
+    -- Path to luarocks binary (default: "/opt/homebrew/bin/luarocks")
+    luarocks_path = "/usr/local/bin/luarocks",
+    
     -- AI model to use (default: "google/gemma-3-4b")
     model = "your-model-name",
     
@@ -126,6 +130,7 @@ ai_helper.apply_to_config(config, {
 - **`ollama_path`** (required for ollama): Path to the ollama binary (e.g., "ollama" or "/usr/local/bin/ollama")
 - **`api_url`** (required for http): Full URL to the API endpoint (e.g., "https://api.openai.com/v1/chat/completions")
 - **`headers`** (optional for http): Custom HTTP headers as key-value pairs
+- **`luarocks_path`** (optional for some types): Path to the luarocks binary for Lua dependencies (default: "/opt/homebrew/bin/luarocks"). Required for Google Gemini provider which needs the `dkjson` library.
 - **`model`**: The AI model name
 - **`keybinding`**: Key combination to trigger the AI helper
   - `key`: The key to press

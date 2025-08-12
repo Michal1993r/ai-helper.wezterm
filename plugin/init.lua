@@ -20,22 +20,28 @@ else
     wezterm.log_warn("AI Helper: Could not find plugin directory, some modules may not load correctly")
 end
 
-local io = require("io")
-local ok, handle = pcall(io.popen, "/opt/homebrew/bin/luarocks path --bin 2>&1")
-if ok and handle then
-    local result = handle:read("*a")
-    local exit_code = handle:close()
+-- Setup luarocks path function that can be called with config
+local function setup_luarocks(config)
+    local luarocks_bin = config.luarocks_path or "/opt/homebrew/bin/luarocks"
+    local io = require("io")
+    local ok, handle = pcall(io.popen, luarocks_bin .. " path --bin 2>&1")
+    if ok and handle then
+        local result = handle:read("*a")
+        local exit_code = handle:close()
 
-    if exit_code then
-        local luarocks_path = result:match("LUA_PATH=(.-)\n")
-        if luarocks_path then
-            package.path = package.path .. ";" .. luarocks_path
+        if exit_code then
+            local luarocks_path = result:match("LUA_PATH=(.-)\n")
+            if luarocks_path then
+                package.path = package.path .. ";" .. luarocks_path
+                wezterm.log_info("AI Helper: luarocks path added successfully")
+            end
+        else
+            wezterm.log_info("AI Helper: luarocks path command failed (luarocks may not be installed)")
         end
     else
-        wezterm.log_info("AI Helper: luarocks path command failed (luarocks may not be installed)")
+        wezterm.log_info("AI Helper: luarocks not found at " ..
+        luarocks_bin .. " (continuing without luarocks dependencies)")
     end
-else
-    wezterm.log_info("AI Helper: luarocks not found or failed to execute (continuing without luarocks dependencies)")
 end
 
 -- Default configuration
@@ -52,7 +58,8 @@ local default_config = {
     timeout = 30, -- seconds
     show_loading = true,
     type = "local",
-    api_key = nil, -- Only used for Google API
+    api_key = nil,                                -- Only used for Google API
+    luarocks_path = "/opt/homebrew/bin/luarocks", -- Default path to luarocks binary
 }
 
 local function get_provider(config)
@@ -189,6 +196,9 @@ end
 -- Main function to apply configuration
 local function apply_to_config(wezterm_config, user_config)
     local config = merge_config(user_config)
+
+    -- Setup luarocks with the configured path
+    setup_luarocks(config)
 
     local provider = get_provider(config)
     if not provider then
