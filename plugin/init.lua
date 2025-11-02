@@ -148,6 +148,16 @@ local function handle_ai_request(window, pane, prompt, config)
         return
     end
 
+    if config.share_pane_history then
+      local history
+      if config.share_n_lines ~= nil then
+        history = pane:get_logical_lines_as_text(config.share_n_lines)
+      else
+        history = pane:get_logical_lines_as_text()
+      end
+      prompt = prompt .. "\nHere is the previous history of my shell:\n" .. history
+    end
+
     -- Show loading indicator
     if config.show_loading then
         show_loading(pane, true)
