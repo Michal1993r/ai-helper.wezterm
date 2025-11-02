@@ -108,6 +108,12 @@ ai_helper.apply_to_config(config, {
         key = "i", 
         mods = "SUPER" 
     },
+
+    -- this keybinding will share the pane history with the AI
+    keybinding_with_pane = { 
+        key = "I", 
+        mods = "SUPER" 
+    },
     
     -- System prompt for the AI (default: CLI/macOS specialist prompt)
     system_prompt = "you are an assistant that specializes in CLI and macOS commands. "
@@ -119,6 +125,9 @@ ai_helper.apply_to_config(config, {
     
     -- Show loading indicator while AI is thinking (default: true)
     show_loading = true,
+
+    -- Numer of history lines shared with the AI
+    share_n_lines = 150
 })
 ```
 
@@ -135,9 +144,12 @@ ai_helper.apply_to_config(config, {
 - **`keybinding`**: Key combination to trigger the AI helper
   - `key`: The key to press
   - `mods`: Modifier keys (e.g., "SUPER", "CTRL", "ALT", "SHIFT")
+- **`keybinding_with_pane`**: Same as keybinding, but it will share the pane history with the AI.
+  You can use this for improved context knowledge and for revising the suggested commands
 - **`system_prompt`**: Instructions for the AI on how to behave and format responses
 - **`timeout`**: How long to wait for AI response before timing out
 - **`show_loading`**: Whether to display "🤖 AI is thinking..." while waiting
+- **`share_n_lines`**: The maximum number of lines shared with the AI; by default, it is the view pane
 
 ### Example Output
 
