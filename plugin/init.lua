@@ -51,6 +51,10 @@ local default_config = {
         key = "i",
         mods = "SUPER",
     },
+    keybinding_with_pane = {
+        key = "I",
+        mods = "SUPER",
+    },
     system_prompt = "you are an assistant that specializes in CLI and macOS commands. "
         .. "you will be brief and to the point, if asked for commands print them in a way that's easy to copy, "
         .. "otherwise just answer the question. concatenate commands with && or || for ease of use. "
@@ -148,6 +152,16 @@ local function handle_ai_request(window, pane, prompt, config)
         return
     end
 
+    if config._share_pane_history then
+      local history
+      if config.share_n_lines ~= nil then
+        history = pane:get_logical_lines_as_text(config.share_n_lines)
+      else
+        history = pane:get_logical_lines_as_text()
+      end
+      prompt = prompt .. "\nHere is the previous history of my shell:\n" .. history
+    end
+
     -- Show loading indicator
     if config.show_loading then
         show_loading(pane, true)
@@ -232,6 +246,23 @@ local function apply_to_config(wezterm_config, user_config)
                 else
                     wezterm.log_info("AI Helper: Request cancelled by user")
                 end
+            end),
+        }),
+    })
+
+    table.insert(wezterm_config.keys, {
+        key = config.keybinding_with_pane.key,
+        mods = config.keybinding_with_pane.mods,
+        action = act.PromptInputLine({
+            description = "🤖 Enter AI prompt (sharing pane!):",
+            action = wezterm.action_callback(function(window, pane, line)
+                config._share_pane_history = true
+                if line then
+                    handle_ai_request(window, pane, line, config)
+                else
+                    wezterm.log_info("AI Helper: Request cancelled by user")
+                end
+                config._share_pane_history = false
             end),
         }),
     })
