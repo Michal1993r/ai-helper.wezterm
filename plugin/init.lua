@@ -1,12 +1,15 @@
 local wezterm = require("wezterm")
 local act = wezterm.action
+local separator = package.config:sub(1, 1) == "\\" and "\\" or "/"
+local is_windows = separator == "\\"
 
 local function findPluginPackagePath(search_pattern)
-    local separator = package.config:sub(1, 1) == "\\" and "\\" or "/"
     for _, v in ipairs(wezterm.plugin.list()) do
         -- Match by component name or URL containing the search pattern
-        if (v.component and v.component:find(search_pattern, 1, true)) or
-            (v.url and v.url:find(search_pattern, 1, true)) then
+        if
+            (v.component and v.component:find(search_pattern, 1, true))
+            or (v.url and v.url:find(search_pattern, 1, true))
+        then
             return v.plugin_dir .. separator .. "plugin" .. separator .. "?.lua"
         end
     end
@@ -39,8 +42,9 @@ local function setup_luarocks(config)
             wezterm.log_info("AI Helper: luarocks path command failed (luarocks may not be installed)")
         end
     else
-        wezterm.log_info("AI Helper: luarocks not found at " ..
-        luarocks_bin .. " (continuing without luarocks dependencies)")
+        wezterm.log_info(
+            "AI Helper: luarocks not found at " .. luarocks_bin .. " (continuing without luarocks dependencies)"
+        )
     end
 end
 
@@ -62,7 +66,7 @@ local default_config = {
     timeout = 30, -- seconds
     show_loading = true,
     type = "local",
-    api_key = nil,                                -- Only used for Google API
+    api_key = nil, -- Only used for Google API
     luarocks_path = "/opt/homebrew/bin/luarocks", -- Default path to luarocks binary
 }
 
@@ -121,6 +125,15 @@ local function clean_response(response)
     return response
 end
 
+-- Clear the current line in the terminal (cross-platform)
+local function clear_line(pane)
+    if is_windows then
+        pane:send_text("\x1b[2K\r") -- ANSI escape to clear line + carriage return
+    else
+        pane:send_text("\u{15}\r") -- Ctrl+U to clear line + carriage return (Unix)
+    end
+end
+
 -- Parse JSON response with better error handling
 local function parse_ai_response(response)
     local cleaned = clean_response(response)
@@ -153,13 +166,13 @@ local function handle_ai_request(window, pane, prompt, config)
     end
 
     if config._share_pane_history then
-      local history
-      if config.share_n_lines ~= nil then
-        history = pane:get_logical_lines_as_text(config.share_n_lines)
-      else
-        history = pane:get_logical_lines_as_text()
-      end
-      prompt = prompt .. "\nHere is the previous history of my shell:\n" .. history
+        local history
+        if config.share_n_lines ~= nil then
+            history = pane:get_logical_lines_as_text(config.share_n_lines)
+        else
+            history = pane:get_logical_lines_as_text()
+        end
+        prompt = prompt .. "\nHere is the previous history of my shell:\n" .. history
     end
 
     -- Show loading indicator
@@ -186,8 +199,7 @@ local function handle_ai_request(window, pane, prompt, config)
         end
 
         -- Clear current line and send command if present
-        pane:send_text("\u{15}") -- Ctrl+U to clear line
-        pane:send_text("\r")
+        clear_line(pane)
 
         if response.command and response.command ~= "" then
             pane:send_text(response.command)
@@ -202,8 +214,7 @@ local function handle_ai_request(window, pane, prompt, config)
         pane:inject_output("\r\n" .. error_msg)
 
         -- Still clear the line for user convenience
-        pane:send_text("\u{15}")
-        pane:send_text("\r")
+        clear_line(pane)
     end
 end
 
