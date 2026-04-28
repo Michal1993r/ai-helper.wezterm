@@ -50,7 +50,7 @@ end
 
 -- Default configuration
 local default_config = {
-    model = "google/gemma-3-4b",
+    model = "gemini-3-flash-preview",
     keybinding = {
         key = "i",
         mods = "SUPER",
@@ -62,12 +62,12 @@ local default_config = {
     system_prompt = "you are an assistant that specializes in CLI and macOS commands. "
         .. "you will be brief and to the point, if asked for commands print them in a way that's easy to copy, "
         .. "otherwise just answer the question. concatenate commands with && or || for ease of use. "
-        .. "structure your output in a JSON schema with 2 fields: message and command",
+        .. "Structure your output in a raw JSON schema with 2 fields: message and command. Do not use markdown formatting or backticks. Output raw JSON only.",
     timeout = 30, -- seconds
     show_loading = true,
     type = "local",
     api_key = nil, -- Only used for Google API
-    luarocks_path = "/opt/homebrew/bin/luarocks", -- Default path to luarocks binary
+    luarocks_path = luarocks_bin, -- Default path to luarocks binary
 }
 
 local function get_provider(config)
